@@ -18,7 +18,7 @@ func day3() {
 
 	vbits, mask, err := parsebinary(aoc.Reader(3))
 	if err != nil {
-		log.Fatalf("IO error: %w", err)
+		log.Fatalf("IO error: %v", err)
 	}
 
 	var maxbit uint64
@@ -49,6 +49,10 @@ func day3() {
 	aoc.Logln(ones, len(vbits))
 	aoc.Logf("γ = %#b\nε = %#b\n", γ, ε)
 	fmt.Println("Day 3/1:", γ*ε)
+
+	o2 := filter3(vbits, mask, 1)
+	co2 := filter3(vbits, mask, 0)
+	fmt.Println("Day 3/3:", o2*co2)
 }
 
 func parsebinary(r io.Reader) (v []uint64, mask uint64, err error) {
@@ -69,4 +73,67 @@ func parsebinary(r io.Reader) (v []uint64, mask uint64, err error) {
 		}
 	}
 	return v, mask, scanner.Err()
+}
+
+func filter3(v0 []uint64, mask uint64, bit byte) uint64 {
+
+	shift := uint(bits.OnesCount64(mask))
+
+	var v, w []uint64
+	v = append(v, v0...)
+	for shift != 0 && len(v) > 1 {
+		w, v = v, w[:0]
+		shift--
+
+		onecount := 0
+		for _, x := range w {
+			if byte((x>>shift)&1) == 1 {
+				onecount++
+			}
+		}
+
+		var wantbit byte
+		if 2*onecount >= len(w) {
+			wantbit = bit
+		} else {
+			wantbit = bit ^ 1
+		}
+
+		/*
+			oned := 2*onecount - len(w)
+			var wantbit byte
+			if bit == 1 {
+				if oned >= 0 {
+					wantbit = 1
+				} else {
+					wantbit = 0
+				}
+			} else {
+				if oned >= 0 {
+					wantbit = 0
+				} else {
+					wantbit = 1
+				}
+
+				if oned < 0 {
+					wantbit = 1
+				} else {
+					wantbit = 0
+				}
+			}
+		*/
+
+		for _, x := range w {
+			if byte((x>>shift)&1) == wantbit {
+				v = append(v, x)
+			}
+		}
+		aoc.Logf("%d %d %d %d/%d\n", shift, wantbit, len(v), onecount, len(w))
+	}
+
+	if len(v) != 1 {
+		log.Fatalln("Logic error 1 != ", len(v))
+	}
+
+	return v[0]
 }

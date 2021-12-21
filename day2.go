@@ -16,7 +16,7 @@ func init() {
 func day2() {
 	input, err := parsesubcmds(aoc.Reader(2))
 	if err != nil {
-		log.Fatalf("Error parsing commands: %w", err)
+		log.Fatalf("Error parsing commands: %v", err)
 	}
 
 	day2_1(input)
