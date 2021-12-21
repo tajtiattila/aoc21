@@ -21,19 +21,36 @@ func day4() {
 		log.Fatal(err)
 	}
 
-	score := 0
+	var firstscore, lastscore int
+
+	won := make([]bool, len(puzzle.card))
+	n := len(puzzle.card)
 Outer:
 	for _, d := range puzzle.draw {
-		for _, c := range puzzle.card {
+		for i, c := range puzzle.card {
+			if won[i] {
+				continue
+			}
 			c.mark(d)
-			if c.win() {
-				score = c.score(d)
+			if !c.win() {
+				continue
+			}
+
+			switch n {
+			case len(puzzle.card):
+				firstscore = c.score(d)
+			case 1:
+				lastscore = c.score(d)
 				break Outer
 			}
+
+			won[i] = true
+			n--
 		}
 	}
 
-	fmt.Println("Day 4/1:", score)
+	fmt.Println("Day 4/1:", firstscore)
+	fmt.Println("Day 4/2:", lastscore)
 
 }
 
