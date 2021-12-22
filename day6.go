@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"strings"
 
 	"github.com/tajtiattila/aoc"
 )
@@ -13,12 +11,8 @@ func init() {
 }
 
 func day6() {
-	age, err := parseCommaInts(strings.TrimSpace(aoc.MustString(6)))
-	if err != nil {
-		log.Fatal(err)
-	}
+	age := aoc.MustInts(6)
 
-	v := lanternfishsim(age, 80)
 	fmt.Println("Day 6/1:", lanternfishsim2(age, 80))
 	fmt.Println("Day 6/2:", lanternfishsim2(age, 256))
 }

@@ -143,7 +143,7 @@ func parsebingo(r io.Reader) (*bingopuzzle, error) {
 
 func parseCommaInts(s string) ([]int, error) {
 	var v []int
-	for _, x := range strings.Split(s, ",") {
+	for _, x := range strings.Split(strings.TrimSpace(s), ",") {
 		n, err := strconv.Atoi(x)
 		if err != nil {
 			return nil, err
