@@ -164,7 +164,3 @@ func sortDigits(src []uint8) []uint8 {
 
 	return db
 }
-
-func fail(args ...interface{}) {
-	panic(fmt.Sprint(args))
-}
