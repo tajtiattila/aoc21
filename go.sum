@@ -4,6 +4,8 @@ github.com/tajtiattila/aoc v0.0.0-20211221095324-b40a0af763da h1:BcCsernWvPR8J5G
 github.com/tajtiattila/aoc v0.0.0-20211221095324-b40a0af763da/go.mod h1:9v5h/ZyWgHXfQAOk+TrBw97TtxLMns26gIyjVRjxo/Q=
 github.com/tajtiattila/aoc v0.0.0-20211221104627-693691a99def h1:mLmydBsToSzSIMuRPEpzI29tsJExJAV5QHp6enbaB/o=
 github.com/tajtiattila/aoc v0.0.0-20211221104627-693691a99def/go.mod h1:9v5h/ZyWgHXfQAOk+TrBw97TtxLMns26gIyjVRjxo/Q=
+github.com/tajtiattila/aoc v0.0.0-20211222210103-ba6a72177c3c h1:C3xL1SS5RSY5eRoZWFgCJTkOCRxfirrY/uIzrks9jhA=
+github.com/tajtiattila/aoc v0.0.0-20211222210103-ba6a72177c3c/go.mod h1:9v5h/ZyWgHXfQAOk+TrBw97TtxLMns26gIyjVRjxo/Q=
 golang.org/x/net v0.0.0-20211216030914-fe4d6282115f h1:hEYJvxw1lSnWIl8X9ofsYMklzaDs90JI2az5YMd4fPM=
 golang.org/x/net v0.0.0-20211216030914-fe4d6282115f/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/sys v0.0.0-20201119102817-f84b799fce68/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
