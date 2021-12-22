@@ -13,7 +13,9 @@ func init() {
 func day17() {
 	ta := parsetargetarea(aoc.MustString(17))
 
-	fmt.Println("Day 17/1:", maxshotheight(ta))
+	maxh, nhit := simshot(ta)
+	fmt.Println("Day 17/1:", maxh)
+	fmt.Println("Day 17/2:", nhit)
 }
 
 type box struct {
@@ -35,49 +37,39 @@ func parsetargetarea(s string) box {
 	return b
 }
 
-func maxshotheight(ta box) int {
-	maxh := 0
-	for x := 1; x < ta.min.x/2; x++ {
+func simshot(ta box) (maxheight, nhit int) {
+	for x := 1; x <= ta.max.x; x++ {
 		maxx := x * (x + 1) / 2
 		if maxx < ta.min.x {
 			continue // shot can't reach minx
 		}
-		maxy := -ta.min.y // shot would "skip" target
-		for y := 1; y <= maxy; y++ {
-			h, r := shot(ta, x, y)
-			if r == shotabove {
-				break
-			}
-			if r == shothit && h > maxh {
-				maxh = h
+		d := -ta.min.y
+		for y := -d; y <= d; y++ {
+			if h, ok := shot(ta, x, y); ok {
+				nhit++
+				if h > maxheight {
+					maxheight = h
+				}
 			}
 		}
 	}
-	return maxh
+	return maxheight, nhit
 }
 
-type shotres int
-
-const (
-	shothit shotres = iota
-	shotleft
-	shotabove
-)
-
-func shot(ta box, vx, vy int) (height int, res shotres) {
+func shot(ta box, vx, vy int) (height int, hit bool) {
 	x, y := 0, 0
 	for {
 		if y > height {
 			height = y
 		}
 		if ta.in(point{x, y}) {
-			return height, shothit
+			return height, true
 		}
 		if y < ta.min.y {
-			return 0, shotleft
+			return 0, false
 		}
 		if x > ta.max.x {
-			return 0, shotabove
+			return 0, false
 		}
 		x += vx
 		y += vy
