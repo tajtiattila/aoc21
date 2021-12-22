@@ -13,21 +13,28 @@ func init() {
 func day7() {
 	vx := aoc.MustInts(7)
 
-	minf := crabfuel(vx, 0)
+	id := func(x int) int { return x }
+	cf2 := func(x int) int { return (x*x + x) / 2 }
+
+	fmt.Println("Day 7/1:", crabminfuel(vx, id))
+	fmt.Println("Day 7/2:", crabminfuel(vx, cf2))
+}
+
+func crabminfuel(vx []int, fuelf func(dist int) int) int {
+	minf := crabfuel(vx, 0, fuelf)
 	for x, to := imin(vx...), imax(vx...); x < to; x++ {
-		f := crabfuel(vx, x)
+		f := crabfuel(vx, x, fuelf)
 		if f < minf {
 			minf = f
 		}
 	}
-
-	fmt.Println("Day 7/1:", minf)
+	return minf
 }
 
-func crabfuel(vx []int, target int) int {
+func crabfuel(vx []int, target int, fuelf func(dist int) int) int {
 	sum := 0
 	for _, x := range vx {
-		sum += iabs(x - target)
+		sum += fuelf(iabs(x - target))
 	}
 	return sum
 }
