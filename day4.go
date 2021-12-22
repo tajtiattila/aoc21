@@ -125,7 +125,7 @@ func parsebingo(r io.Reader) (*bingopuzzle, error) {
 	for scanner.Scan() {
 		var err error
 		if draw == nil {
-			draw, err = parsedraw(scanner.Text())
+			draw, err = parseCommaInts(scanner.Text())
 		} else {
 			var c bingocard
 			c, err = parsebingocard(scanner.Text())
@@ -141,7 +141,7 @@ func parsebingo(r io.Reader) (*bingopuzzle, error) {
 	}, scanner.Err()
 }
 
-func parsedraw(s string) ([]int, error) {
+func parseCommaInts(s string) ([]int, error) {
 	var v []int
 	for _, x := range strings.Split(s, ",") {
 		n, err := strconv.Atoi(x)
