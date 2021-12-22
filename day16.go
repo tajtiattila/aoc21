@@ -16,6 +16,7 @@ func day16() {
 	pkt := parsepacket(aoc.MustString(16))
 
 	fmt.Println("Day 16/1:", pkt.sumver())
+	fmt.Println("Day 16/2:", pkt.value())
 }
 
 type bitpacket struct {
@@ -32,6 +33,61 @@ func (k bitpacket) sumver() uint {
 		sumv += sub.sumver()
 	}
 	return sumv
+}
+
+func (k bitpacket) value() uint {
+	boolu := func(v bool) uint {
+		if v {
+			return 1
+		}
+		return 0
+	}
+
+	var res uint
+	switch k.typ {
+	case 0: // sum
+		for _, l := range k.sub {
+			res += l.value()
+		}
+
+	case 1: // product
+		res = 1
+		for _, l := range k.sub {
+			res *= l.value()
+		}
+
+	case 2: // minimum
+		res = k.sub[0].value()
+		for _, l := range k.sub[1:] {
+			if x := l.value(); x < res {
+				res = x
+			}
+		}
+
+	case 3: // maximum
+		res = k.sub[0].value()
+		for _, l := range k.sub[1:] {
+			if x := l.value(); res < x {
+				res = x
+			}
+		}
+
+	case 4: // literal
+		res = k.literal
+
+	case 5, 6, 7:
+		l := k.sub[0].value()
+		r := k.sub[1].value()
+		switch k.typ {
+		case 5: // greater than
+			res = boolu(l > r)
+		case 6: // less than
+			res = boolu(l < r)
+		case 7: // equal to
+			res = boolu(l == r)
+		}
+	}
+	return res
 }
 
 func parsepacket(s string) bitpacket {
