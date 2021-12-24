@@ -17,8 +17,16 @@ func day19() {
 	sd := parse19(aoc.Reader(19))
 	aoc.Logf("%d scanners\n", len(sd))
 
-	beacon := beacons19(sd)
-	fmt.Println("Day 10/1:", len(beacon))
+	matched := matchbeacons(sd)
+	beacon := beacons19(matched)
+	fmt.Println("Day 19/1:", len(beacon))
+
+	sv := make([]vec3, len(matched))
+	for i, d := range matched {
+		sv[i] = d.tr
+	}
+
+	fmt.Println("Day 19/2:", maxvec3dist(sv))
 }
 
 func beacons19(sd []scannerdata) []vec3 {
@@ -26,9 +34,8 @@ func beacons19(sd []scannerdata) []vec3 {
 		return nil
 	}
 
-	matched := matchbeacons(sd)
 	m := make(map[vec3]struct{})
-	for _, d := range matched {
+	for _, d := range sd {
 		for _, p := range d.beacon {
 			p = p.mul(d.rot).add(d.tr)
 			m[p] = struct{}{}
@@ -39,6 +46,21 @@ func beacons19(sd []scannerdata) []vec3 {
 		v = append(v, p)
 	}
 	return v
+}
+
+func maxvec3dist(v []vec3) int {
+	var maxd int
+	for i, iv := range v {
+		for j, jv := range v {
+			if i != j {
+				d := iv.sub(jv).manh()
+				if d > maxd {
+					maxd = d
+				}
+			}
+		}
+	}
+	return maxd
 }
 
 func matchbeacons(src []scannerdata) []scannerdata {
@@ -157,6 +179,10 @@ func (a vec3) cross(b vec3) vec3 {
 		a[2]*b[0] - a[0]*b[2],
 		a[0]*b[1] - a[1]*b[0],
 	}
+}
+
+func (v vec3) manh() int {
+	return iabs(v[0]) + iabs(v[1]) + iabs(v[2])
 }
 
 type mat3 [9]int
