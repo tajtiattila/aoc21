@@ -16,28 +16,21 @@ func init() {
 func day22() {
 	ops := parsecuboidops(aoc.Reader(22))
 
-	sm := make(map[vec3]struct{})
-	for _, o := range ops {
-		min, max, ok := o.p1(50)
-		if !ok {
-			continue
-		}
+	var p1 []cuboidop
+	const a = 50
 
-		var p vec3
-		for p[0] = min[0]; p[0] <= max[0]; p[0]++ {
-			for p[1] = min[1]; p[1] <= max[1]; p[1]++ {
-				for p[2] = min[2]; p[2] <= max[2]; p[2]++ {
-					if o.on {
-						sm[p] = struct{}{}
-					} else {
-						delete(sm, p)
-					}
-				}
+Outer:
+	for _, o := range ops {
+		for i := 0; i < 3; i++ {
+			if iabs(o.min[i]) > a || iabs(o.max[i]) > a {
+				continue Outer
 			}
 		}
+		p1 = append(p1, o)
 	}
 
-	fmt.Println("Day 22/1:", len(sm))
+	fmt.Println("Day 22/1:", mapcuboids(p1))
+	fmt.Println("Day 22/2:", mapcuboids(ops))
 }
 
 func parsecuboidops(r io.Reader) []cuboidop {
@@ -64,23 +57,6 @@ func parsecuboidops(r io.Reader) []cuboidop {
 type cuboidop struct {
 	min, max vec3
 	on       bool
-}
-
-func (o *cuboidop) p1(a int) (min, max vec3, ok bool) {
-	min, max = o.min, o.max
-	var z vec3
-	for i := 0; i < 3; i++ {
-		if a < min[i] || max[i] < -a {
-			return z, z, false
-		}
-		if min[i] < -a {
-			min[i] = -a
-		}
-		if a < max[i] {
-			max[i] = a
-		}
-	}
-	return min, max, true
 }
 
 func mapcuboids(ops []cuboidop) int64 {
@@ -117,6 +93,7 @@ func mapcuboids(ops []cuboidop) int64 {
 		}
 		cm.set(cm.ofs3(lo), cm.ofs3(hi), o.on)
 	}
+
 	return cm.countones()
 }
 
@@ -131,14 +108,18 @@ type cuboidm struct {
 func (cm *cuboidm) ofs3(v vec3) vec3 {
 	var o vec3
 	for i := 0; i < 3; i++ {
-		o[i] = sort.SearchInts(cm.axv[i], v[i])
+		w := sort.SearchInts(cm.axv[i], v[i])
+		if cm.axv[i][w] != v[i] {
+			panic("impossible")
+		}
+		o[i] = w
 	}
 	return o
 }
 
 func (cm *cuboidm) set(lo, hi vec3, one bool) {
 	var b byte
-	if on {
+	if one {
 		b = 1
 	} else {
 		b = 0
@@ -170,7 +151,7 @@ func (cm *cuboidm) countones() int64 {
 			ym := ya[y+1] - ya[y]
 			ofs := z*cm.zstride + y*cm.ystride
 			for x := 0; x < xhi; x++ {
-				if ofs > 0 {
+				if cm.pix[ofs] > 0 {
 					xm := xa[x+1] - xa[x]
 					n += int64(xm * ym * zm)
 				}
