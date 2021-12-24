@@ -16,6 +16,9 @@ func init() {
 func day19() {
 	sd := parse19(aoc.Reader(19))
 	aoc.Logf("%d scanners\n", len(sd))
+
+	beacon := beacons19(sd)
+	fmt.Println("Day 10/1:", len(beacon))
 }
 
 func beacons19(sd []scannerdata) []vec3 {
@@ -42,27 +45,24 @@ func matchbeacons(src []scannerdata) []scannerdata {
 	if len(src) == 0 {
 		return nil
 	}
-	var done, next, left []scannerdata
-	done = append(bases, src[0])
-	nexts = append(nexts, src[0])
-
+	var done, left []scannerdata
+	done = append(done, src[0])
 	left = append(left, src[1:]...)
-Outer:
-	for len(nexts) != nil {
-		n := len(bases) - 1
-		base, nexts = nexts[n], nexts[:n]
+
+	for i := 0; len(left) != 0 && i < len(done); i++ {
+		base := done[i]
+
 		var nleft []scannerdata
 		for _, next := range left {
 			if beaconmatch(&base, &next) {
 				done = append(done, next)
-				bases = append(nexts, next)
 			} else {
 				nleft = append(nleft, next)
 			}
 		}
-
 		left = nleft
 	}
+
 	if len(left) != 0 {
 		panic("matchbeacons: no progress")
 	}
@@ -72,9 +72,9 @@ Outer:
 func beaconmatch(a, b *scannerdata) bool {
 	for _, rot := range rot3 {
 		m := make(map[vec3]int)
-		for ia, ka := range a.beacon {
-			ka = ka.mul(a.rot)
-			for ib, kb := range b.beacon {
+		for _, ka := range a.beacon {
+			ka = ka.mul(a.rot).add(a.tr)
+			for _, kb := range b.beacon {
 				kb = kb.mul(rot)
 				tr := ka.sub(kb)
 				m[tr]++
@@ -90,7 +90,7 @@ func beaconmatch(a, b *scannerdata) bool {
 		}
 		if bestn >= 12 {
 			b.rot = rot
-			b.tr = tr
+			b.tr = besttr
 			return true
 		}
 	}
@@ -197,7 +197,7 @@ func init() {
 			y[i] = d.x
 			y[j] = d.y
 
-			z := x.cross(x, y)
+			z := x.cross(y)
 			rot3 = append(rot3, mat3fromv(x, y, z))
 		}
 	}
