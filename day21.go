@@ -79,7 +79,6 @@ type diracpl struct {
 	score [2]int
 
 	pno int // next player num (0/1)
-	rno int // next roll idx (0..2)
 }
 
 type diracwin [2]int64
@@ -97,50 +96,48 @@ func diracwinmost(p1, p2 int) int64 {
 	}
 }
 
-/*
-10@19 10@19 (1) → 6,2
-r1: 1@20 10@19 (2) → 3,2
-	r1: 1@20 1@20 (1) → 3,0
-		p1win*3
-	r2: 1@20 2@21 p2win
-	r3: 1@20 3@22 p2win
-r2: 2@21 10@19 p1win
-r3: 3@22 10@19 p1win
-*/
+var logday21 bool
+
 func diracwinsub(m map[diracpl]diracwin, state diracpl, winscore int) diracwin {
 	if r, ok := m[state]; ok {
 		return r
 	}
 
-	aoc.Logf("%d@%d %d@%d (%d:%d)\n",
-		state.p[0], state.score[0], state.p[1], state.score[1],
-		state.pno+1, state.rno+1)
+	if logday21 {
+		fmt.Printf("%d@%d %d@%d (%d)\n",
+			state.p[0], state.score[0], state.p[1], state.score[1],
+			state.pno+1)
+	}
 
 	var dw diracwin
 
 	i := state.pno
 	nstate := state
-	nstate.rno = (state.rno + 1) % 3
-	if nstate.rno == 0 {
-		nstate.pno = 1 - state.pno
-	}
-	for roll := 1; roll <= 3; roll++ {
-		nstate.p[i] = 1 + (state.p[i]+roll-1)%10
-		nstate.score[i] = state.score[i] + nstate.p[i]
-		if nstate.rno == 0 && nstate.score[i] >= winscore {
-			dw[i]++
-		} else {
-			r := diracwinsub(m, nstate, winscore)
-			dw[0] += r[0]
-			dw[1] += r[1]
+	nstate.pno = 1 - state.pno
+	for r1 := 1; r1 <= 3; r1++ {
+		for r2 := 1; r2 <= 3; r2++ {
+			for r3 := 1; r3 <= 3; r3++ {
+				roll := r1 + r2 + r3
+				nstate.p[i] = 1 + (state.p[i]+roll-1)%10
+				nstate.score[i] = state.score[i] + nstate.p[i]
+				if nstate.score[i] >= winscore {
+					dw[i]++
+				} else {
+					r := diracwinsub(m, nstate, winscore)
+					dw[0] += r[0]
+					dw[1] += r[1]
+				}
+			}
 		}
 	}
 
 	m[state] = dw
 
-	aoc.Logf(" %d@%d %d@%d (%d:%d) → %d,%d\n",
-		state.p[0], state.score[0], state.p[1], state.score[1],
-		state.pno+1, state.rno+1,
-		dw[0], dw[1])
+	if logday21 {
+		fmt.Printf(" %d@%d %d@%d (%d) → %d,%d\n",
+			state.p[0], state.score[0], state.p[1], state.score[1],
+			state.pno+1,
+			dw[0], dw[1])
+	}
 	return dw
 }
