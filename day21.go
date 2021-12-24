@@ -89,7 +89,7 @@ func diracwinmost(p1, p2 int) int64 {
 	state := diracpl{
 		p: [2]int{p1, p2},
 	}
-	dw := diracwinsub(m, state)
+	dw := diracwinsub(m, state, 21)
 	if dw[0] > dw[1] {
 		return dw[0]
 	} else {
@@ -107,10 +107,14 @@ r1: 1@20 10@19 (2) → 3,2
 r2: 2@21 10@19 p1win
 r3: 3@22 10@19 p1win
 */
-func diracwinsub(m map[diracpl]diracwin, state diracpl) diracwin {
+func diracwinsub(m map[diracpl]diracwin, state diracpl, winscore int) diracwin {
 	if r, ok := m[state]; ok {
 		return r
 	}
+
+	aoc.Logf("%d@%d %d@%d (%d:%d)\n",
+		state.p[0], state.score[0], state.p[1], state.score[1],
+		state.pno+1, state.rno+1)
 
 	var dw diracwin
 
@@ -123,11 +127,10 @@ func diracwinsub(m map[diracpl]diracwin, state diracpl) diracwin {
 	for roll := 1; roll <= 3; roll++ {
 		nstate.p[i] = 1 + (state.p[i]+roll-1)%10
 		nstate.score[i] = state.score[i] + nstate.p[i]
-		const diracwin = 21
-		if nstate.score[i] >= diracwin {
+		if nstate.rno == 0 && nstate.score[i] >= winscore {
 			dw[i]++
 		} else {
-			r := diracwinsub(m, nstate)
+			r := diracwinsub(m, nstate, winscore)
 			dw[0] += r[0]
 			dw[1] += r[1]
 		}
@@ -135,8 +138,9 @@ func diracwinsub(m map[diracpl]diracwin, state diracpl) diracwin {
 
 	m[state] = dw
 
-	aoc.Logf("%d@%d %d@%d (%d:%d) → %d,%d\n",
+	aoc.Logf(" %d@%d %d@%d (%d:%d) → %d,%d\n",
 		state.p[0], state.score[0], state.p[1], state.score[1],
-		state.pno+1, state.rno+1, dw[0], dw[1])
+		state.pno+1, state.rno+1,
+		dw[0], dw[1])
 	return dw
 }
