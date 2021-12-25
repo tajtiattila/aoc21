@@ -20,14 +20,16 @@ func day24() {
 	}
 	cf.digit(0, 0)
 
-	fmt.Println("Day 24/1:", cf.bestc)
+	fmt.Println("Day 24/1:", cf.maxc)
+	fmt.Println("Day 24/2:", cf.minc)
 }
 
 type codefind24 struct {
 	prg []coef24
 	num []byte
 
-	bestc uint64
+	minc uint64
+	maxc uint64
 }
 
 func (cf *codefind24) digit(z, ndigit int) {
@@ -75,8 +77,11 @@ func (cf *codefind24) havenum() {
 		c = c*10 + uint64(b-'0')
 	}
 	aoc.Logln()
-	if c > cf.bestc {
-		cf.bestc = c
+	if cf.minc == 0 || c < cf.minc {
+		cf.minc = c
+	}
+	if c > cf.maxc {
+		cf.maxc = c
 	}
 }
 
