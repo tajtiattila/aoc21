@@ -15,8 +15,17 @@ func init() {
 func day23() {
 	st := parseamphistate(aoc.MustString(23))
 
+	cost := runday23(8, st)
+	fmt.Println("Day 23/1:", cost)
+
+	st = st.unfold()
+	cost = runday23(16, st)
+	fmt.Println("Day 23/2:", cost)
+}
+
+func runday23(npod int, st amphistate) int {
 	var ab amphibuf
-	ab.npod = 8
+	ab.npod = npod
 	path, cost := astar.FindPath(st, func(p0 astar.Point, dst []astar.State) []astar.State {
 		st := p0.(amphistate)
 		return ab.next(st, dst)
@@ -26,14 +35,19 @@ func day23() {
 			fmt.Println(st.(amphistate).image(ab.npod))
 		}
 	}
-	fmt.Println("Day 23/1:", cost)
+	if len(path) == 0 {
+		return -1
+	}
+	return cost
 }
 
 // positions of pods AABBCCDD:
 //   0..10 hallway
 //   13, 15, 17, 19 upper room
 //   24, 26, 28, 30 lower room
-type amphistate [8]byte
+//   35, 37, 39, 41 upper unfolded room
+//   46, 48, 50, 52 lower unfolded room
+type amphistate [16]byte
 
 const amphiystride = 11
 
@@ -56,6 +70,33 @@ func parseamphistate(s string) amphistate {
 	var st amphistate
 	copy(st[:], w)
 	return st
+}
+
+func (st amphistate) unfold() amphistate {
+	const yst = amphiystride
+	var uf amphistate
+	for i := 0; i < 8; i++ {
+		j := (i/2)*4 + i%2
+		p := st[i]
+		if p >= 2*yst {
+			p += 2 * yst
+		}
+		uf[j] = p
+	}
+	//     2 4 6 8
+	// y1 #D#C#B#A#
+	// y2 #D#B#A#C#
+	const y1 = 2 * yst
+	const y2 = 3 * yst
+	uf[2] = y1 + 8
+	uf[3] = y2 + 6
+	uf[6] = y1 + 6
+	uf[7] = y2 + 4
+	uf[10] = y1 + 4
+	uf[11] = y2 + 8
+	uf[14] = y1 + 2
+	uf[15] = y2 + 2
+	return uf
 }
 
 var amphimovecost = []int{1, 10, 100, 1000}
@@ -95,25 +136,24 @@ func amphipodroomx(pod int) int {
 	return 2 + 2*pod
 }
 
-func (st amphistate) costleft() int {
+func (st amphistate) costleft(npod int) int {
 	n := 0
-	for i, p := range st[:] {
+	nkind := npod / 4
+	for i, p := range st[:npod] {
 		x, y := amphixy(int(p))
-		pod := i / 2
+		pod := i / nkind
 		roomx := amphipodroomx(pod)
 		if x == roomx {
 			// pod in correct room
 			continue
 		}
-		var nstep int
-		switch y {
-		case 0:
-			// pod in hallway
-			nstep = 1 + iabs(x-roomx)
-		case 1:
-			nstep = 4
-		case 2:
-			nstep = 5
+		nstep := iabs(x - roomx) // x movement
+		if y == 0 {
+			// pod in hallway, must move down at least once
+			nstep++
+		} else {
+			// pod in wrong room, must exit and then down at least once
+			nstep += y + 1
 		}
 		n += nstep * amphimovecost[pod]
 	}
@@ -137,6 +177,7 @@ var logamphinext bool
 func (b *amphibuf) next(st amphistate, dst []astar.State) []astar.State {
 	// refresh map
 	bottom := b.npod / 4
+	nkind := b.npod / 4
 	nlen := amphiystride * (bottom + 1)
 	if len(b.im) < nlen {
 		b.im = make([]byte, nlen)
@@ -144,8 +185,8 @@ func (b *amphibuf) next(st amphistate, dst []astar.State) []astar.State {
 	for i := range b.im[:nlen] {
 		b.im[i] = 0
 	}
-	for i, p := range st[:] {
-		pod := i / 2
+	for i, p := range st[:b.npod] {
+		pod := i / nkind
 		b.im[int(p)] = 'A' + byte(pod)
 	}
 
@@ -154,8 +195,9 @@ func (b *amphibuf) next(st amphistate, dst []astar.State) []astar.State {
 	}
 
 	// find possible moves
+	hasvalid := false
 	for i, p := range st[:b.npod] {
-		pod := i / 2
+		pod := i / nkind
 		stepcost := amphimovecost[pod]
 		nstate := st
 		for _, m := range b.validmoves(pod, p) {
@@ -163,13 +205,17 @@ func (b *amphibuf) next(st amphistate, dst []astar.State) []astar.State {
 			if logamphinext {
 				fmt.Printf("%c: %d → %d (%d)\n", 'A'+byte(pod), p, m.pos, m.nstep)
 			}
+			hasvalid = true
 			dst = append(dst, astar.State{
 				Point: nstate,
 				Cost:  stepcost * m.nstep,
 
-				EstimateLeft: nstate.costleft(),
+				EstimateLeft: nstate.costleft(b.npod),
 			})
 		}
+	}
+	if !hasvalid && logamphinext {
+		fmt.Println("no valid moves")
 	}
 
 	return dst
@@ -246,7 +292,7 @@ func (b *amphibuf) validmoves(pod int, start0 byte) []amphimove {
 		// move to destination room
 		dx := amphipodroomx(pod)
 		var nsame, nother int
-		for y, p := 0, dx; y <= bottom; y, p = y+1, p+yst {
+		for y, p := 1, dx+yst; y <= bottom; y, p = y+1, p+yst {
 			if dc := b.im[p]; dc != 0 {
 				if podc == dc {
 					nsame++
@@ -258,6 +304,10 @@ func (b *amphibuf) validmoves(pod int, start0 byte) []amphimove {
 		}
 		if nother != 0 {
 			// other pods blocking
+			if logamphinext {
+				fmt.Printf("%c: %d → %d other pods in room\n",
+					'A'+byte(pod), start, dx)
+			}
 			return nil
 		}
 
